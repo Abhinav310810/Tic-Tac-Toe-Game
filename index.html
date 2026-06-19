@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Tic Tac Toe</title>
+    <style>
+        /* Cyberpunk Arcade Theme Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f111a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .game-container {
+            text-align: center;
+            background: #161925;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border: 2px solid #23293f;
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 { color: #00f0ff; margin-top: 0; font-size: 28px; letter-spacing: 1px; }
+        .status-display {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #ff007f;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        /* 3x3 Grid Layout Matrix */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .cell {
+            background: #1f2438;
+            border: 2px solid #2d3554;
+            border-radius: 8px;
+            height: 90px;
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .cell:hover {
+            background: #28304e;
+            border-color: #00f0ff;
+        }
+        /* Specific colors for Player X and Player O */
+        .cell.x-mark { color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5); }
+        .cell.o-mark { color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.5); }
+        
+        .restart-btn {
+            background: #ff007f;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .restart-btn:hover { background: #d00067; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>❌ Tic Tac Toe ⭕</h1>
+        <div id="status" class="status-display">Player X's Turn</div>
+        
+        <div class="grid">
+            <div class="cell" onclick="makeMove(0)"></div>
+            <div class="cell" onclick="makeMove(1)"></div>
+            <div class="cell" onclick="makeMove(2)"></div>
+            <div class="cell" onclick="makeMove(3)"></div>
+            <div class="cell" onclick="makeMove(4)"></div>
+            <div class="cell" onclick="makeMove(5)"></div>
+            <div class="cell" onclick="makeMove(6)"></div>
+            <div class="cell" onclick="makeMove(7)"></div>
+            <div class="cell" onclick="makeMove(8)"></div>
+        </div>
+
+        <button class="restart-btn" onclick="resetGame()">Reset Arena 🔄</button>
+    </div>
+
+    <script>
+        // --- DATA LAYER & ENGINE STATE ---
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isGameActive = true;
+
+        // Multi-dimensional array defining all possible winning row, column, and diagonal configurations
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        // --- CORE GAME INTERACTION LOOP ---
+        function makeMove(cellIndex) {
+            // Guard clause: ignore clicks if cell is filled or game has concluded
+            if (board[cellIndex] !== "" || !isGameActive) return;
+
+            // Write move to database array state
+            board[cellIndex] = currentPlayer;
+            
+            // Render the mark inside the HTML cell element
+            const cells = document.querySelectorAll('.cell');
+            cells[cellIndex].innerText = currentPlayer;
+            cells[cellIndex].classList.add(currentPlayer === "X" ? "x-mark" : "o-mark");
+
+            // Check game state conditions
+            checkResult();
+        }
+
+        // --- RESULTS AND MATCH EVALUATION ENGINE ---
+        function checkResult() {
+            let roundWon = false;
+
+            // Iterate through the 8 win configurations using a simple check loop
+            for (let i = 0; i < winConditions.length; i++) {
+                const condition = winConditions[i];
+                let a = board[condition[0]];
+                let b = board[condition[1]];
+                let c = board[condition[2]];
+
+                // If any position is empty, keep evaluating
+                if (a === "" || b === "" || c === "") continue;
+
+                // If all three slots share the exact same symbol, a win is locked in
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            const statusDisplay = document.getElementById("status");
+
+            if (roundWon) {
+                statusDisplay.innerText = `🎉 Player ${currentPlayer} Wins the Match!`;
+                statusDisplay.style.color = "#00f0ff";
+                isGameActive = false;
+                return;
+            }
+
+            // Check for a Draw condition: if there are no empty strings left in the array
+            let roundDraw = !board.includes("");
+            if (roundDraw) {
+                statusDisplay.innerText = "🤝 Match is a Draw!";
+                statusDisplay.style.color = "#ffcc00";
+                isGameActive = false;
+                return;
+            }
+
+            // No win or draw occurred, toggle players for the next turn
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.innerText = `Player ${currentPlayer}'s Turn`;
+            statusDisplay.style.color = currentPlayer === "X" ? "#ff007f" : "#00f0ff";
+        }
+
+        // --- ENGINE RESTART UTILITY ---
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            isGameActive = true;
+            
+            const statusDisplay = document.getElementById("status");
+            statusDisplay.innerText = "Player X's Turn";
+            statusDisplay.style.color = "#ff007f";
+
+            // Clean clean the visual classes from cells
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.innerText = "";
+                cell.classList.remove("x-mark", "o-mark");
+            });
+        }
+    </script>
+</body>
+</html>
